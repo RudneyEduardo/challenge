@@ -1,0 +1,86 @@
+service: desafio-aws
+frameworkVersion: ">=1.1.0"
+provider:
+  name: aws
+  runtime: python3.8
+  profile: desafioAws
+  region: us-east-1
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${opt:stage}-images
+  iam:
+    role:
+      statements:
+        - Effect: 'Allow'
+          Action:
+            - 's3:GetObject'
+          Resource: "arn:aws:s3:::devimagesbucket/*"
+        - Effect: 'Allow'
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: 'arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}'
+
+
+        
+
+functions:
+  extractMetadata:
+    handler: functions/handler.extractMetadata
+    description:
+    memorySize: 128
+    timeout: 30
+    events:
+      - s3:
+          bucket: devimagesbucket 
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: uploads/
+            - suffix: .jpg
+  getMetadata:
+    handler: functions/handler.getMetadata
+    description:
+    memorySize: 128
+    timeout: 30
+    events:
+      - http:
+          path: images/getMetadata/{s3objectkey}
+          method: get
+          cors: true
+  getImage:
+    handler: functions/handler.getImage
+    description:
+    memorySize: 128
+    timeout: 30
+    events:
+      - http:
+          path: images/getimage/{s3objectkey}
+          method: get
+          cors: true
+  infoImages:
+    handler: functions/handler.infoImages
+    description:
+    memorySize: 128
+    timeout: 30
+    events:
+      - http:
+          path: images/infoimages
+          method: get
+          cors: true
+
+resources:
+  Resources:
+    NotesTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: s3objectkey
+            AttributeType: S
+        KeySchema:
+          - AttributeName: s3objectkey
+            KeyType: HASH
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        BillingMode: PAY_PER_REQUEST
