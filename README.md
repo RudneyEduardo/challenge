@@ -1,5 +1,5 @@
 # serverless-challenge
-Build a serverless architecture for image analysis 
+Desafio para construir funções lambda em python usando Serverless Framework
 
 # Functions 
 
