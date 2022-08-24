@@ -18,9 +18,15 @@ Build a serverless architecture for image analysis
 
 # How to Run
 
+
+
 ```console
+foo@bar:~$ npm install -g serverless
+        (installs the serverless framework globally in your computer)
+foo@bar:~$ serverless config credentials --provider aws --key (your amz account key) --secret  (your amz account secret key)
+        (configure the AWS credentials in your computer)
 foo@bar:~$ serverless deploy --stage dev
-foo
+        (Now deploying the code)
 ```
 
 
