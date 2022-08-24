@@ -1,5 +1,8 @@
 # serverless-challenge
+- BR:
 Desafio para construir funções lambda em python usando Serverless Framework
+- EN:
+Challenge to build lambda functions in python using Serverless Framework
 
 # Functions 
 
