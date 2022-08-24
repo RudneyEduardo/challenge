@@ -14,14 +14,13 @@ dynamodb = boto3.client('dynamodb')
 
 
 def extractMetadata(event, context):
-    # Get the object from the event and show its content type
+    # Get the object from the event and show its content type (the s3objectKey)
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = urllib.parse.unquote_plus(
         event['Records'][0]['s3']['object']['key'], encoding='utf-8')
     try:
         response = s3.get_object(Bucket=bucket, Key=key)
-        print("BUCKET:" + bucket)
-        print("KEY: " + key)
+        
         contentType = response['ContentType']
         contentLength = str(response['ContentLength'])
         # Put image metadata in dynamodb
@@ -31,7 +30,7 @@ def extractMetadata(event, context):
                                                                     'ContentType': {'S': contentType},
                                                                     'ContentLength': {'S': contentLength}
                                                                     })
-        return 'Inserted Item!'
+        return 'Inserted Item in DynamoDb!'
     except Exception as e:
         print(e)
         print('Error getting object {} from bucket {}. Make sure they exist and your bucket is in the same region as this function.'.format(key, bucket))
@@ -39,6 +38,7 @@ def extractMetadata(event, context):
 
 
 def getMetadata(event, context):
+    # Get the object from the event and show its content type (the s3objectKey)
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = urllib.parse.unquote_plus(
         event['Records'][0]['s3']['object']['key'], encoding='utf-8')
@@ -46,9 +46,14 @@ def getMetadata(event, context):
         s3Obj = { 'Bucket': bucket, 'Key': key }
         jsons3Obj = json.dumps(s3Obj)
         
+
+        #Get the item from dynamo
         resp = dynamodb.get_item(TableName='desafio-aws-dev-images', Key={"s3objectkey": jsons3Obj})
+
         ContentType = resp['Item']['ContentType']
         ContentLength = resp['Item']['ContentLength']
+
+
         return {ContentType:ContentType, ContentLength:ContentLength}
     except Exception as e:
         print(e)
@@ -57,10 +62,12 @@ def getMetadata(event, context):
 
 
 def getImage(event, context):
+    # Get the object from the event and show its content type (the s3objectKey)
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = urllib.parse.unquote_plus(
         event['Records'][0]['s3']['object']['key'], encoding='utf-8')
     try:
+        #Downloads the image from s3 
         s3.Bucket(bucket).download_file(key, 'download.jpg')
     except boto3.exceptions.ClientError as e:
         if e.response['Error']['Code'] == "404":
